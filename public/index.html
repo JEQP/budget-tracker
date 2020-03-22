@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta http-equiv="X-UA-Compatible" content="ie=edge" />
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/semantic-ui/2.4.1/semantic.min.css" />
+  <link rel="stylesheet" href="assets/css/style.css" />
+  <title>Budgets Tracker</title>
+</head>
+
+<body>
+  <div class="title">
+    Budget Tracker
+  </div>
+  <div class="input">
+    <div class="description">
+      <form action="/action_page.php">
+        <label for="desc">Description</label>
+        <input type="text" id="desc" name="desc" placeholder="Description">
+      </form>
+      
+    </div>
+    <div class="amount">
+      <form action="/action_page.php">
+        <label for="amou">Amount</label>
+        <input type="text" id="amou" name="amou" placeholder="Amount">
+      </form>
+      
+    </div>
+    <div class="transaction">
+      Transaction
+      <form>
+        <select id="tran" name="tran">
+        <option value="add">Deposit</option>
+        <option value="sub">Withdraw</option>
+        </select>
+      </form>
+    </div>
+  </div>
+  <div class="submitTrans">
+    <!-- NOTE: This may need to go inside the form element, in which case css adjustment will be needed -->
+    <input type="submit" value="Submit"> 
+  </div>
+  <div class="output">
+    History
+  </div>
+  <script src="assets/js/script.js"></script>
+</body>
+
+</html>
