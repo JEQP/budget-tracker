@@ -1,23 +1,16 @@
 let transactions = [];
 let myChart;
 
-if ("serviceWorker" in navigator) {
-  window.addEventListener("load", () => {
-    navigator.serviceWorker.register("service-worker.js")
-      .then((reg) => {
-        console.log("Service worker registered.", reg);
-      })
-  });
-}
+
 
 const request = indexedDB.open("budgetdatabase", 2);
 
 request.onerror = function (event) {
-  console.log("Error opening database");
+  console.log("Error opening database: " + event);
 };
 
 request.onsuccess = event => {
-  console.log(request.result);
+  console.log("onsuccess: " + event.result);
 };
 
 
@@ -34,9 +27,9 @@ request.onupgradeneeded = event => {
 };
 
 // Opens a transaction, accesses the budget objectStore and statusIndex.
-request.onsuccess = () => {
-  const db = request.result;
-  console.log("ln 39 index.js: " + JSON.stringify(request.result));
+request.onsuccess = ({target}) => {
+  const db = target.result;
+  console.log("ln 32 index.js: " + JSON.stringify(target.result));
   // transaction is how to access the data stores. The first arguement is an array of the objectstores you wish to access, and the second is readwrite or readonly
   const transaction = db.transaction(["budget"], "readwrite");
   const budgetStore = transaction.objectStore("budget");
@@ -213,3 +206,23 @@ document.querySelector("#add-btn").onclick = function () {
 document.querySelector("#sub-btn").onclick = function () {
   sendTransaction(false);
 };
+
+function saveRecord(data) {
+  var transaction = db.transaction(["budget"], "readwrite");
+
+  transaction.oncomplete = function(event) {
+    console.log("Saved to indexeddb!");
+  };
+  
+  transaction.onerror = function(event) {
+    console.log("error saving to db: " + JSON.stringify(event));
+  };
+  
+  var objectStore = transaction.objectStore("budget");
+  data.forEach(function(payment) {
+    var request = objectStore.add(payment);
+    request.onsuccess = function(event) {
+      console.log("apparent success db: " + JSON.stringify(event));
+    };
+  });
+}
