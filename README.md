@@ -7,7 +7,7 @@ The site uses IndexedDB, Mongo, Mongoose, Service Workers.
 ### Main responsibilities:
 The creation of the service worker and caching abilities, and managing the offline database capabilities.  
 
-Deployed URL: [http://agile-thicket-87690.herokuapp.com/](http://agile-thicket-87690.herokuapp.com/)
+Deployed URL: [https://frozen-lowlands-13931.herokuapp.com/](https://frozen-lowlands-13931.herokuapp.com/)
 
 ### The Graph and Table
 ![BudgetGraph](https://github.com/JEQP/budget-tracker/blob/master/graph.jpg)
