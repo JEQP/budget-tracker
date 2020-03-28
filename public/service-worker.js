@@ -36,12 +36,3 @@ self.addEventListener("fetch", function (event) {
     );
 });
 
-self.addEventListener('sync', function(event) {
-    if (event.tag == 'budgetSync') {
-      event.waitUntil(
-        // get info from indexeddb and send to mongo db  
-        
-        doSomeStuff());
-    }
-  });
-

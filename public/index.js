@@ -1,4 +1,5 @@
 let transactions = [];
+var db;
 let myChart;
 
 
@@ -10,13 +11,14 @@ request.onerror = function (event) {
 };
 
 request.onsuccess = event => {
-  console.log("onsuccess: " + event.result);
+  db = event.target.result;
+  console.log("onsuccess: " + event.target.result);
 };
 
 
 // Create schema -- links db to the appropriate instance of the database
 request.onupgradeneeded = event => {
-  const db = event.target.result;
+  db = event.target.result;
 
   // Creates an object store with a date keypath that can be used to query on. Date is unique. The keypath must be a key in the object
   const budgetStore = db.createObjectStore("budget", {
@@ -26,35 +28,83 @@ request.onupgradeneeded = event => {
   budgetStore.createIndex("dateIndex", "date", { unique: false });
 };
 
-// Opens a transaction, accesses the budget objectStore and statusIndex.
-request.onsuccess = ({target}) => {
-  const db = target.result;
-  console.log("ln 32 index.js: " + JSON.stringify(target.result));
-  // transaction is how to access the data stores. The first arguement is an array of the objectstores you wish to access, and the second is readwrite or readonly
+
+
+function saveRecord(data) {
+  console.log("saverecord run"); // console logs
+  console.log("request: " + request); // console logs and shows request
   const transaction = db.transaction(["budget"], "readwrite");
-  const budgetStore = transaction.objectStore("budget");
-  const dateIndex = budgetStore.index("dateIndex");
 
-  // Adds data to our objectStore
-  budgetStore.add({ name: "Lunch", value: -20, date: new Date().setDate(new Date().getDate() - 5)});
-  budgetStore.add({ name: "Dinner", value: -40, date: new Date().setDate(new Date().getDate() - 4)});
-  budgetStore.add({ name: "Party Time", value: 300, date: new Date().setDate(new Date().getDate() - 3)});
-  budgetStore.add({ name: "Breakfast", value: 15, date: new Date().setDate(new Date().getDate() - 2)});
+  // access your pending object store
+  const store = transaction.objectStore("budget");
 
-  // Opens a Cursor request and iterates over the documents.
-  const getCursorRequest = budgetStore.openCursor();
-  getCursorRequest.onsuccess = e => {
-    const cursor = e.target.result;
-    if (cursor) {
-      if (cursor.value.status === "in-progress") {
-        const todo = cursor.value;
-        todo.status = "complete";
-        cursor.update(todo);
-      }
-      cursor.continue();
+  console.log("Data: " + JSON.stringify(data));
+  store.add(data);
+
+}
+
+function checkDatabase() {
+  console.log("checkdatabase run");
+  console.log("db: ", db);
+  const transaction = db.transaction(["budget"], "readwrite");
+
+  var objectStore = transaction.objectStore("budget");
+  var objectStoreRequest = objectStore.getAll();
+
+
+  objectStoreRequest.onsuccess = function (event) {
+    console.log("objectStoreRequest: ", objectStoreRequest);
+    event.target.result.forEach(transferMongo);
+
+    function transferMongo(item) {
+      console.log("transferMongo run", item);
+      transactions.unshift(item);
     }
-  };
-};
+
+    console.log("transactions final: ", transactions);
+
+    fetch("/api/transaction/bulk", {
+      method: "POST",
+      body: JSON.stringify(transactions),
+      headers: {
+        Accept: "application/json, text/plain, */*",
+        "Content-Type": "application/json"
+      }
+    })
+      .then(response => {
+        return response.json();
+      })
+      .then(data => {
+        if (data.errors) {
+          errorEl.textContent = "Missing Information";
+        }
+        else {
+          // clear indexedDB (actually do this)
+          clearIndexedDB();
+
+          function clearIndexedDB() {
+            const transaction = db.transaction(["budget"], "readwrite");
+
+            // access your pending object store
+            const store = transaction.objectStore("budget");
+            var clearObjectStore = store.clear();
+            clearObjectStore.onsuccess = function (event) {
+              console.log("IndexedDB store cleared");
+            }
+          }
+        }
+      })
+      .catch(err => {
+        // fetch failed
+        console.log("err: ", err);
+
+        // clear form
+
+      });
+  }
+}
+/////
+
 
 fetch("/api/transaction")
   .then(response => {
@@ -207,22 +257,11 @@ document.querySelector("#sub-btn").onclick = function () {
   sendTransaction(false);
 };
 
-function saveRecord(data) {
-  var transaction = db.transaction(["budget"], "readwrite");
+if (navigator.onLine) {
+  request.onsuccess = event => {
+    db = event.target.result;
+    console.log("onsuccess in onLine: " + event.target.result);
+    checkDatabase();
+  };
 
-  transaction.oncomplete = function(event) {
-    console.log("Saved to indexeddb!");
-  };
-  
-  transaction.onerror = function(event) {
-    console.log("error saving to db: " + JSON.stringify(event));
-  };
-  
-  var objectStore = transaction.objectStore("budget");
-  data.forEach(function(payment) {
-    var request = objectStore.add(payment);
-    request.onsuccess = function(event) {
-      console.log("apparent success db: " + JSON.stringify(event));
-    };
-  });
 }
