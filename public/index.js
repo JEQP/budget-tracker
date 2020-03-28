@@ -29,39 +29,36 @@ request.onupgradeneeded = event => {
 };
 
 
-
+// if no online connection this get run.
 function saveRecord(data) {
-  console.log("saverecord run"); // console logs
-  console.log("request: " + request); // console logs and shows request
+  // start transaction
   const transaction = db.transaction(["budget"], "readwrite");
 
   // access your pending object store
   const store = transaction.objectStore("budget");
-
-  console.log("Data: " + JSON.stringify(data));
+// Data is sent as an object that matches the indexedDB store
   store.add(data);
 
 }
 
+// when online connection detected, this is run.
 function checkDatabase() {
-  console.log("checkdatabase run");
-  console.log("db: ", db);
+// start transaction
   const transaction = db.transaction(["budget"], "readwrite");
 
   var objectStore = transaction.objectStore("budget");
+  // get all records from object store
   var objectStoreRequest = objectStore.getAll();
 
 
   objectStoreRequest.onsuccess = function (event) {
-    console.log("objectStoreRequest: ", objectStoreRequest);
+// loop over the array of objects
     event.target.result.forEach(transferMongo);
-
+//transfer each item to an array, then the array to mongo DB
     function transferMongo(item) {
       console.log("transferMongo run", item);
       transactions.unshift(item);
     }
-
-    console.log("transactions final: ", transactions);
 
     fetch("/api/transaction/bulk", {
       method: "POST",
@@ -79,10 +76,11 @@ function checkDatabase() {
           errorEl.textContent = "Missing Information";
         }
         else {
-          // clear indexedDB (actually do this)
+          // if no errors, clear the indexedDB
           clearIndexedDB();
 
           function clearIndexedDB() {
+            //start transaction
             const transaction = db.transaction(["budget"], "readwrite");
 
             // access your pending object store
